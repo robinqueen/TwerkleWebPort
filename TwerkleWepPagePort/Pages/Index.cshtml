@@ -1,0 +1,245 @@
+﻿@page
+
+@using TwerkleWepPagePort.Models
+@using TwerkleWepPagePort.Services
+
+@inject ITwerkleService twerkleService
+@model IndexModel
+@{
+    ViewData["Title"] = "Twerkle!";
+}
+<script>
+    window.onload = function() {
+        document.addEventListener("keydown", function(event) {
+            if (!checkFKeys(event.key) && /[0-9]/.test(event.key) && event.key != 'Enter'){
+                 alert("Please use Letters only.");
+                event.preventDefault();
+                return false;
+            }
+
+        if (event.key === 'Enter') {
+            event.preventDefault(); //stops default action: submitting form
+            $(this).blur();
+            $('#btnSubmit').focus().click();//give your submit an ID
+        }
+        else if(event.key === 'Delete' || event.key === 'Backspace'){
+            var currentFocused = document.activeElement;
+            if(currentFocused.tagName === 'INPUT' && currentFocused.name.includes("wordAttempts.Attempts"))
+            {
+                DeleteAndResetFocus();
+            }
+           
+        }
+        });
+        $("#errorMessage").hide();
+
+        document.addEventListener("keyup", function(event) {
+             var firstEmptyTextbox = $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() == ""; }).first();
+                firstEmptyTextbox.focus();
+          });
+    };
+
+    function checkFKeys(str){
+        if(str === "F1" || str === "F2" || str === "F3" || str === "F4" || str === "F5" || str === "F6" || str === "F7" ||
+        str === "F8" || str === "F9" || str === "F10"  || str === "F11" || str === "F12" )
+        {
+            return true
+        }
+
+        return false;
+    }
+
+    function parseGuess(){
+        var guess = "";
+        $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).css("display") != "none" }).each(function(index,item) {
+            guess += item.value;
+        });
+        if(guess.length != 5){
+            showError();
+            return false;
+
+        }
+        return true;
+
+    }
+
+    function showError(){
+        alert("Please Enter 5 Letters");
+    }
+
+     function setText(val){
+
+
+             if(val == 'Del'){
+                 DeleteAndResetFocus();
+             }
+             else{
+                var firstEmptyTextbox = $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() == ""; }).first();
+                
+                firstEmptyTextbox.focus();
+                firstEmptyTextbox.val(val);
+                firstEmptyTextbox = $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() == ""; }).first();
+                firstEmptyTextbox.focus();
+             }
+     }
+
+     function DeleteAndResetFocus(){
+         var lastTextboxWithValue = $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() != ""; }).last()
+                 lastTextboxWithValue.val('');
+                 $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() != ""; }).last().focus()
+     }
+
+
+
+
+
+</script>
+
+@if (@Model.isWinner || @Model.loseGame)
+{
+    if (@Model.isWinner)
+    {
+        <div class="mainContent">
+            <div class="endGameDisplay">
+                <label>Congrats!</label> <br/>
+                <label>You have Guessed the Right Twerker!</label> <br/>
+                <label style="font-size: 2.5em; font-weight: bold;" >@Model.wordAttempts.WordOfDay</label>
+            </div>
+           
+        </div>
+    }
+    else
+    {
+        <div class="mainContent">
+            <div class="endGameDisplay">
+                <label>Better Luck Next Time!</label> <br/>
+                <label>The Right Twerker was:</label> <br/>
+                <label style="font-size: 2.5em; font-weight: bold;" >@Model.wordAttempts.WordOfDay</label>
+            </div>
+            
+        </div>
+    }
+}
+else
+{
+    <form method="post" asp-page="Index" id="mainForm">
+        @Html.AntiForgeryToken();
+
+        <div class="mainContent">
+
+            <p style="font-size: 3em; color:white">TWERKLE!</p>
+            <hr />
+            <p style="font-size: 1.2em; color:white">Guess the name of the Twerker Below in 4 Tries</p>
+            <p style="font-size: 1.2em; color:white">First name, last name, and known nicknames</p>
+            <hr />
+
+
+            @{
+                int i = 1;
+                int letterIndex = 1;
+            }
+
+            @Html.TextBoxFor(x => x.wordAttempts.WordOfDay, new { style = "display: none;" } )
+            @Html.TextBoxFor(x => x.wordAttempts.CurrentAttempt, new { style = "display: none;" } )
+
+            @for (var id = 0; id < @Model.wordAttempts.rightLetterAndPosition.Count; id++)
+            {
+                @Html.TextBoxFor(x => x.wordAttempts.rightLetterAndPosition[id].Color, new { style = "display: none;" })
+                @Html.TextBoxFor(x => x.wordAttempts.rightLetterAndPosition[id].Letter, new { style = "display: none;" })
+                @Html.TextBoxFor(x => x.wordAttempts.rightLetterAndPosition[id].Position, new { style = "display: none;" })
+            }
+
+            @for (var id = 0; id < @Model.wordAttempts.rightLetterNotPosition.Count; id++)
+            {
+                @Html.TextBoxFor(x => x.wordAttempts.rightLetterNotPosition[id].Color, new { style = "display: none;" })
+                @Html.TextBoxFor(x => x.wordAttempts.rightLetterNotPosition[id].Letter, new { style = "display: none;" })
+                @Html.TextBoxFor(x => x.wordAttempts.rightLetterNotPosition[id].Position, new { style = "display: none;" })
+            }
+
+
+
+            @for (var attemptIndex = 0; attemptIndex < @Model.wordAttempts.Attempts.Count; attemptIndex++)
+            {
+                if (Model.wordAttempts.CurrentAttempt == i)
+                {
+
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter1, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter1Color,  @maxlength="1" })
+
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter2, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter2Color, @maxlength="1" })
+
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter3, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter3Color,  @maxlength="1" })
+
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter4, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter4Color,  @maxlength="1" })
+
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter5, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter5Color,  @maxlength="1" })
+
+
+                }
+                else
+                {
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter1, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter1Color,  @maxlength="1",  @readonly="readonly"})
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter2, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter2Color,  @maxlength="1",  @readonly="readonly" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter3, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter3Color,  @maxlength="1",  @readonly="readonly" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter4, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter4Color,  @maxlength="1",  @readonly="readonly" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter5, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter5Color,  @maxlength="1",  @readonly="readonly" })
+                }
+
+                <br />
+                i++;
+
+            }
+
+            @for (int newidx = 0; newidx < Model.wordAttempts.keyboardUI.Count; newidx++)
+            {
+                @Html.TextBoxFor(x => x.wordAttempts.keyboardUI[newidx].Color, new { style = "display: none;" } )
+                @Html.TextBoxFor(x => x.wordAttempts.keyboardUI[newidx].Letter, new { style = "display: none;" } )
+            }
+
+
+            <!--OnPage Keyboard-->
+        <div class="wrapper flex">
+                <div>
+                    <input type="button" value="Q" name="btnQ" onclick="setText('Q')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "Q").Color />
+                    <input type="button" value="W" name="btnW" onclick="setText('W')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "W").Color />
+                    <input type="button" value="E" name="btnE" onclick="setText('E')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "E").Color />
+                    <input type="button" value="R" name="btnR" onclick="setText('R')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "R").Color />
+                    <input type="button" value="T" name="btnT" onclick="setText('T')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "T").Color />
+                    <input type="button" value="Y" name="btnY" onclick="setText('Y')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "Y").Color />
+                    <input type="button" value="U" name="btnU" onclick="setText('U')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "U").Color />
+                    <input type="button" value="I" name="btnI" onclick="setText('I')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "I").Color />
+                    <input type="button" value="O" name="btnO" onclick="setText('O')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "O").Color />
+                    <input type="button" value="P" name="btnP" onclick="setText('P')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "P").Color />
+                    <br />
+
+                    <input type="button" value="A" name="btnQ" onclick="setText('A')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "A").Color />
+                    <input type="button" value="S" name="btnW" onclick="setText('S')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "S").Color />
+                    <input type="button" value="D" name="btnE" onclick="setText('D')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "D").Color />
+                    <input type="button" value="F" name="btnR" onclick="setText('F')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "F").Color />
+                    <input type="button" value="G" name="btnS" onclick="setText('G')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "G").Color />
+                    <input type="button" value="H" name="btnT" onclick="setText('H')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "H").Color />
+                    <input type="button" value="J" name="btnY" onclick="setText('J')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "J").Color />
+                    <input type="button" value="K" name="btnU" onclick="setText('K')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "K").Color />
+                    <input type="button" value="L" name="btnI" onclick="setText('L')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "L").Color />
+
+                    <br />
+                    <input type="button" value="Del" name="btnDel" onclick="setText('Del')" />
+
+                    <input type="button" value="Z" name="btnZ" onclick="setText('Z')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "Z").Color />
+                    <input type="button" value="X" name="btnX" onclick="setText('X')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "X").Color />
+                    <input type="button" value="C" name="btnC" onclick="setText('C')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "C").Color />
+                    <input type="button" value="V" name="btnV" onclick="setText('V')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "V").Color />
+                    <input type="button" value="B" name="btnB" onclick="setText('B')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "B").Color />
+                    <input type="button" value="N" name="btnN" onclick="setText('N')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "N").Color />
+                    <input type="button" value="M" name="btnM" onclick="setText('M')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "M").Color />
+                    <input type="submit" value="Enter" asp-page-handler="Guess" id="btnSubmit" onclick="return parseGuess();" style="border-radius: 7px;" />
+
+                </div>
+
+            </div>
+        </div>
+
+
+
+    </form>
+
+}
