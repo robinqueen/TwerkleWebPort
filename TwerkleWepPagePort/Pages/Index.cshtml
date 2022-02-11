@@ -11,7 +11,10 @@
 <script>
     window.onload = function() {
         document.addEventListener("keydown", function(event) {
-            if (!checkFKeys(event.key) && /[0-9]/.test(event.key) && event.key != 'Enter'){
+            if(checkFKeys(event.key)){
+                return;
+            }
+            if (/[0-9]/.test(event.key) && event.key != 'Enter'){
                  alert("Please use Letters only.");
                 event.preventDefault();
                 return false;
@@ -23,18 +26,17 @@
             $('#btnSubmit').focus().click();//give your submit an ID
         }
         else if(event.key === 'Delete' || event.key === 'Backspace'){
-            var currentFocused = document.activeElement;
-            if(currentFocused.tagName === 'INPUT' && currentFocused.name.includes("wordAttempts.Attempts"))
-            {
                 DeleteAndResetFocus();
-            }
            
+        }
+        else{
+            setText(event.key.toUpperCase());
         }
         });
         $("#errorMessage").hide();
 
         document.addEventListener("keyup", function(event) {
-             var firstEmptyTextbox = $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() == ""; }).first();
+             var firstEmptyTextbox = $("input[name*='wordAttempts.Attempts']:not([readonly])").filter(function() { return $(this).val() == ""; }).first();
                 firstEmptyTextbox.focus();
           });
     };
@@ -51,7 +53,7 @@
 
     function parseGuess(){
         var guess = "";
-        $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).css("display") != "none" }).each(function(index,item) {
+        $(".editableTextbox").each(function(index,item) {
             guess += item.value;
         });
         if(guess.length != 5){
@@ -68,25 +70,26 @@
     }
 
      function setText(val){
-
-
              if(val == 'Del'){
                  DeleteAndResetFocus();
              }
              else{
-                var firstEmptyTextbox = $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() == ""; }).first();
-                
+                var firstEmptyTextbox = $(".editableTextbox").filter(function() { return $(this).val() == ""; }).first();
+                if(firstEmptyTextbox != null){
+
+                }
                 firstEmptyTextbox.focus();
-                firstEmptyTextbox.val(val);
-                firstEmptyTextbox = $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() == ""; }).first();
+                firstEmptyTextbox[0].setAttribute("value", val);
+                
+                firstEmptyTextbox = $(".editableTextbox").filter(function() { return $(this).val() == ""; }).first();
                 firstEmptyTextbox.focus();
              }
      }
 
      function DeleteAndResetFocus(){
-         var lastTextboxWithValue = $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() != ""; }).last()
-                 lastTextboxWithValue.val('');
-                 $("input[name*='wordAttempts.Attempts']:text:not([readonly])").filter(function() { return $(this).val() != ""; }).last().focus()
+         var lastTextboxWithValue = $(".editableTextbox").filter(function() { return $(this).val() != ""; }).last();
+                 lastTextboxWithValue[0].setAttribute("value", "");
+                 $(".editableTextbox").filter(function() { return $(this).val() != ""; }).last().focus()
      }
 
 
@@ -127,11 +130,14 @@ else
 
         <div class="mainContent">
 
-            <p style="font-size: 3em; color:white">TWERKLE!</p>
-            <hr />
-            <p style="font-size: 1.2em; color:white">Guess the name of the Twerker Below in 4 Tries</p>
-            <p style="font-size: 1.2em; color:white">First name, last name, and known nicknames</p>
-            <hr />
+            <p style="font-size: 3em; color:white;margin:2px;">TWERKLE!</p>
+            <hr style="margin:2px;" />
+            <p class="infoTag">
+                Guess the name of the Twerker Below in 5 Tries
+                <br /> 
+                First name, last name, and known nicknames    
+            </p>
+            <hr style="margin:2px;" />
 
 
             @{
@@ -139,21 +145,21 @@ else
                 int letterIndex = 1;
             }
 
-            @Html.TextBoxFor(x => x.wordAttempts.WordOfDay, new { style = "display: none;" } )
-            @Html.TextBoxFor(x => x.wordAttempts.CurrentAttempt, new { style = "display: none;" } )
+            @Html.HiddenFor(x => x.wordAttempts.WordOfDay, new { style = "display: none;" } )
+            @Html.HiddenFor(x => x.wordAttempts.CurrentAttempt, new { style = "display: none;" } )
 
             @for (var id = 0; id < @Model.wordAttempts.rightLetterAndPosition.Count; id++)
             {
-                @Html.TextBoxFor(x => x.wordAttempts.rightLetterAndPosition[id].Color, new { style = "display: none;" })
-                @Html.TextBoxFor(x => x.wordAttempts.rightLetterAndPosition[id].Letter, new { style = "display: none;" })
-                @Html.TextBoxFor(x => x.wordAttempts.rightLetterAndPosition[id].Position, new { style = "display: none;" })
+                @Html.HiddenFor(x => x.wordAttempts.rightLetterAndPosition[id].Color, new { style = "display: none;" })
+                @Html.HiddenFor(x => x.wordAttempts.rightLetterAndPosition[id].Letter, new { style = "display: none;" })
+                @Html.HiddenFor(x => x.wordAttempts.rightLetterAndPosition[id].Position, new { style = "display: none;" })
             }
 
             @for (var id = 0; id < @Model.wordAttempts.rightLetterNotPosition.Count; id++)
             {
-                @Html.TextBoxFor(x => x.wordAttempts.rightLetterNotPosition[id].Color, new { style = "display: none;" })
-                @Html.TextBoxFor(x => x.wordAttempts.rightLetterNotPosition[id].Letter, new { style = "display: none;" })
-                @Html.TextBoxFor(x => x.wordAttempts.rightLetterNotPosition[id].Position, new { style = "display: none;" })
+                @Html.HiddenFor(x => x.wordAttempts.rightLetterNotPosition[id].Color, new { style = "display: none;" })
+                @Html.HiddenFor(x => x.wordAttempts.rightLetterNotPosition[id].Letter, new { style = "display: none;" })
+                @Html.HiddenFor(x => x.wordAttempts.rightLetterNotPosition[id].Position, new { style = "display: none;" })
             }
 
 
@@ -163,25 +169,25 @@ else
                 if (Model.wordAttempts.CurrentAttempt == i)
                 {
 
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter1, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter1Color,  @maxlength="1" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter1, "", new {  @class="textboxStyle editableTextbox " + Model.wordAttempts.Attempts[attemptIndex].Letter1Color,  @maxlength="1", @readonly="readonly" })
 
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter2, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter2Color, @maxlength="1" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter2, "", new {  @class="textboxStyle editableTextbox " + Model.wordAttempts.Attempts[attemptIndex].Letter2Color, @maxlength="1", @readonly="readonly" })
 
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter3, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter3Color,  @maxlength="1" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter3, "", new {  @class="textboxStyle editableTextbox " + Model.wordAttempts.Attempts[attemptIndex].Letter3Color,  @maxlength="1", @readonly="readonly" })
 
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter4, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter4Color,  @maxlength="1" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter4, "", new {  @class="textboxStyle editableTextbox " + Model.wordAttempts.Attempts[attemptIndex].Letter4Color,  @maxlength="1", @readonly="readonly" })
 
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter5, new {  @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter5Color,  @maxlength="1" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter5, "", new {  @class="textboxStyle editableTextbox " + Model.wordAttempts.Attempts[attemptIndex].Letter5Color,  @maxlength="1", @readonly="readonly" })
 
 
                 }
                 else
                 {
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter1, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter1Color,  @maxlength="1",  @readonly="readonly"})
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter2, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter2Color,  @maxlength="1",  @readonly="readonly" })
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter3, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter3Color,  @maxlength="1",  @readonly="readonly" })
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter4, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter4Color,  @maxlength="1",  @readonly="readonly" })
-                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter5, new { @class="textboxStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter5Color,  @maxlength="1",  @readonly="readonly" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter1, "", new { @class="textboxStyle disabledStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter1Color,  @maxlength="1",  @readonly="readonly"})
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter2, "", new { @class="textboxStyle disabledStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter2Color,  @maxlength="1",  @readonly="readonly" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter3, "", new { @class="textboxStyle disabledStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter3Color,  @maxlength="1",  @readonly="readonly" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter4, "", new { @class="textboxStyle disabledStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter4Color,  @maxlength="1",  @readonly="readonly" })
+                    @Html.TextBoxFor(x => x.wordAttempts.Attempts[attemptIndex].Letter5, "", new { @class="textboxStyle disabledStyle " + Model.wordAttempts.Attempts[attemptIndex].Letter5Color,  @maxlength="1",  @readonly="readonly" })
                 }
 
                 <br />
@@ -191,8 +197,8 @@ else
 
             @for (int newidx = 0; newidx < Model.wordAttempts.keyboardUI.Count; newidx++)
             {
-                @Html.TextBoxFor(x => x.wordAttempts.keyboardUI[newidx].Color, new { style = "display: none;" } )
-                @Html.TextBoxFor(x => x.wordAttempts.keyboardUI[newidx].Letter, new { style = "display: none;" } )
+                @Html.HiddenFor(x => x.wordAttempts.keyboardUI[newidx].Color, new { style = "display: none;" } )
+                @Html.HiddenFor(x => x.wordAttempts.keyboardUI[newidx].Letter, new { style = "display: none;" } )
             }
 
 
@@ -222,8 +228,7 @@ else
                     <input type="button" value="L" name="btnI" onclick="setText('L')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "L").Color />
 
                     <br />
-                    <input type="button" value="Del" name="btnDel" onclick="setText('Del')" />
-
+                    <input type="submit" value="Enter" asp-page-handler="Guess" id="btnSubmit" onclick="return parseGuess();" style="border-radius: 7px; width:48px" />
                     <input type="button" value="Z" name="btnZ" onclick="setText('Z')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "Z").Color />
                     <input type="button" value="X" name="btnX" onclick="setText('X')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "X").Color />
                     <input type="button" value="C" name="btnC" onclick="setText('C')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "C").Color />
@@ -231,7 +236,7 @@ else
                     <input type="button" value="B" name="btnB" onclick="setText('B')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "B").Color />
                     <input type="button" value="N" name="btnN" onclick="setText('N')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "N").Color />
                     <input type="button" value="M" name="btnM" onclick="setText('M')" class=@Model.wordAttempts.keyboardUI.FirstOrDefault(x => x.Letter == "M").Color />
-                    <input type="submit" value="Enter" asp-page-handler="Guess" id="btnSubmit" onclick="return parseGuess();" style="border-radius: 7px;" />
+                    <input type="button" value="Del" name="btnDel" onclick="setText('Del')" />
 
                 </div>
 
